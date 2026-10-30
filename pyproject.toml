@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "personal-health-agent"
+version = "0.5.0"
+description = "Local health journaling agent with guarded memory and a SQLite metric store"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.92.0",
+    "mcp[cli]>=1.0.0",
+    "python-telegram-bot>=21.0",
+    "apscheduler>=3.10.0",
+    "aiosqlite>=0.20.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.setuptools.packages.find]
+include = ["bryan*"]
+
+[project.scripts]
+bryan-mcp = "bryan.mcp_server.server:main"
+bryan-bot = "bryan.telegram.bot:main"
+bryan-run = "bryan.main:main"
+
+[tool.setuptools.package-data]
+bryan = ["db/schema.sql", "agent/*.md", "skills/*.md"]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"

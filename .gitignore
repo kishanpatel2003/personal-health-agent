@@ -1,0 +1,19 @@
+# Credentials and local records
+.env
+.env.*
+!.env.template
+*.db
+*.sqlite
+*.sqlite3
+vault/
+.local/
+profile.md
+.audit/
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+dist/
+build/
+.DS_Store
