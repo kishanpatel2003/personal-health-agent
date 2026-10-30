@@ -1,12 +1,8 @@
 # Personal Health Agent
 
-A local journaling agent with durable, inspectable memory. Telegram messages feed
-a Claude Messages API tool loop; structured metrics live in SQLite and notes live
-in a Markdown vault. A scheduler can request check-ins and summaries.
+A Telegram-based health journal with durable memory, SQLite metrics, and a Markdown vault. A Claude tool-use loop reads and updates records, while a scheduler handles check-ins and summaries.
 
-The useful boundary is in code: everyday notes go to scratch/logs/issues, while
-canonical facts and summaries require a separate promotion tool and audit record.
-This prototype is for tracking and organizing information, not diagnosis or care.
+Everyday notes go to scratch, logs, and issues. Changes to canonical facts and summaries require a promotion tool and an audit record.
 
 ## Setup
 
@@ -19,42 +15,35 @@ pip install -e '.[dev]'
 cp .env.template .env
 ```
 
-For live use, set your own Anthropic key, Telegram bot token, and
-`BRYAN_TELEGRAM_USER_ID`. The Telegram adapter refuses to start without an
-explicit authorized user. Then run `python3 -m bryan.main`. Running it contacts
-those services and can incur API usage. No keys, personal records, or model
-conversations are bundled.
+Set `ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`, and `BRYAN_TELEGRAM_USER_ID`, then run:
 
-To configure a personal profile, point `BRYAN_PROFILE_PATH` at a local Markdown
-file outside this repository. Vault and database paths are configurable with
-`BRYAN_VAULT_PATH` and `BRYAN_DB_PATH`; defaults use
-`~/.local/share/personal-health-agent`. Treat both as private data.
+```sh
+python3 -m bryan.main
+```
 
-## Offline verification
+Telegram access is restricted to the configured user. Model requests use your Anthropic account.
+
+Point `BRYAN_PROFILE_PATH` at a local Markdown profile. `BRYAN_VAULT_PATH` and `BRYAN_DB_PATH` configure storage; the defaults use `~/.local/share/personal-health-agent`.
+
+## Design
+
+- `bryan/telegram/session_bridge.py`: bounded tool-use loop and conversation state
+- `bryan/mcp_server/`: note, metric, and issue tools with enforced write policy
+- `bryan/db/`: schema, validation models, and trend queries
+- `bryan/scheduler/`: proactive jobs
+- `bryan/agent/system_prompt.md`: agent instructions
+
+## Tests
 
 ```sh
 python3 -m pytest -q
 python3 -m compileall -q bryan
 ```
 
-Tests create temporary synthetic records, check that a fresh database is empty,
-verify guarded promotion/audit behavior, and reject writes outside the vault.
-They do not call Telegram or an LLM.
+Tests use temporary records to check empty database initialization, guarded promotion, audit logging, and vault path restrictions. Telegram and model calls are mocked.
 
-## Layout
+## Storage and behavior
 
-- `bryan/telegram/session_bridge.py`: bounded tool-use loop and conversation state
-- `bryan/mcp_server/`: local note, metric, and issue tools with write policy
-- `bryan/db/`: schema, validation models, trend queries
-- `bryan/scheduler/`: proactive jobs
-- `bryan/agent/system_prompt.md`: generic agent instructions
+The agent runs for one user on a trusted local machine. The vault is plaintext storage. Conversation history resets on restart, and photo messages currently pass their captions to the model. The optional stdio MCP server expects a trusted local caller.
 
-## Limits
-
-Conversation history is in memory and resets on restart. Photo handling currently
-passes the caption to the agent, not the image. The vault is plaintext local
-storage, not encrypted. The optional stdio MCP server assumes a trusted local
-caller. This is a single-user prototype, not a clinical system or a multi-user
-service. Review generated interpretations rather than treating them as facts.
-
-MIT licensed. This public code edition has no original private history or data.
+[MIT](LICENSE)
